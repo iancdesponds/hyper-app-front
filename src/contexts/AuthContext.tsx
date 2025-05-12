@@ -2,17 +2,28 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react'
 import Cookies from 'js-cookie'
 
-
 interface AuthContextType {
   token: string | null
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  register: (data: RegisterData) => Promise<void>
+}
+
+interface RegisterData {
+  first_name: string
+  last_name: string
+  cpf: string
+  birth_date: string   
+  email: string
+  phone_number: string
+  password: string
 }
 
 export const AuthContext = createContext<AuthContextType>({
   token: null,
   login: async () => {},
   logout: () => {},
+  register: async () => {},
 })
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -50,6 +61,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   }
 
+  const register = async (data: RegisterData) => {
+    const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  
+    // sempre parse o JSON
+    const payload = await resp.json();
+  
+    if (!resp.ok) {
+      console.error('🔥 Register payload sent:', data);
+      console.error('🔥 Response from server:', payload);
+      // levante um erro com a mensagem detalhada
+      const msg = (payload.detail ?? JSON.stringify(payload)) as string;
+      throw new Error(msg);
+    }
+  
+    return payload;  // objeto UserRead, caso queira usar
+  };
+
   const logout = () => {
     Cookies.remove('session_token')
     setToken(null)
@@ -57,7 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   )

@@ -54,6 +54,7 @@ export default function Register() {
     timePerDay: "",
   });
   const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext); 
   const nav = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -63,9 +64,26 @@ export default function Register() {
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
 
-  const handleSubmit = () => {
-    login(data1.email, data1.password);
-    nav("/");
+  const handleSubmit = async (e: React.FormEvent) => {
+    console.log(data2.firstName);
+    console.log("AAA")
+    try {
+      await register({
+        first_name:   data2.firstName,
+        last_name:    data2.lastName,
+        cpf:          data2.cpf,
+        birth_date:   new Date(data2.birthDate).toISOString(),  
+        email:        data1.email,
+        phone_number: data1.phone,
+        password:     data1.password,
+      });
+      
+      await login(data1.email, data1.password);
+
+      nav("/");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Determinar largura da barra de progresso com base na etapa atual
