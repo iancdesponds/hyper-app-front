@@ -14,10 +14,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // aqui você poderia validar, mas geraremos um token fictício
-    const fakeToken = btoa(`${email}:${password}`);
-    login(fakeToken);
-    nav('/');
+    login(email, password);
   };
 
   return (

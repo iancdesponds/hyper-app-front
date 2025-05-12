@@ -64,9 +64,7 @@ export default function Register() {
   const prev = () => setStep((s) => s - 1);
 
   const handleSubmit = () => {
-    // aqui você mandaria para o backend; por enquanto:
-    const fakeToken = btoa(data1.email + ":" + data1.password);
-    login(fakeToken);
+    login(data1.email, data1.password);
     nav("/");
   };
 
