@@ -110,7 +110,10 @@ export const Content = styled("main", {
   overflowY: "auto",
   backgroundColor: "#121212",
   color: "#ffffff",
-
+  display: "flex",
+  flexDirection: "column",
+  gap: "1.5rem",
+  
   "& h1": {
     fontSize: "1.5rem",
     fontWeight: "500",

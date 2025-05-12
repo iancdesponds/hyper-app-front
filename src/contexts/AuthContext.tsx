@@ -36,7 +36,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [])
 
-  // Função de login: chama /auth/login, pega o access_token e salva no cookie
   const login = async (email: string, password: string) => {
     const body = new URLSearchParams()
     body.append('username', email)    // o OAuth2PasswordRequestForm espera 'username'
