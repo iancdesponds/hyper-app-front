@@ -3,8 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
 import InputMask from "react-input-mask";
 import { StyledRegister } from "./styles";
-import { Eye, EyeOff } from 'lucide-react';
-
+import { Eye, EyeOff } from "lucide-react";
 
 type Step1 = {
   username: string;
@@ -54,30 +53,31 @@ export default function Register() {
     timePerDay: "",
   });
   const { login } = useContext(AuthContext);
-  const { register } = useContext(AuthContext); 
+  const { register } = useContext(AuthContext);
   const nav = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [passwordTooShort, setPasswordTooShort] = useState(false);
 
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
 
   const handleSubmit = async (e: React.FormEvent) => {
     console.log(data2.firstName);
-    console.log("AAA")
+    console.log("AAA");
     try {
       await register({
-        first_name:   data2.firstName,
-        last_name:    data2.lastName,
-        cpf:          data2.cpf,
-        birth_date:   new Date(data2.birthDate).toISOString(),  
-        email:        data1.email,
+        first_name: data2.firstName,
+        last_name: data2.lastName,
+        cpf: data2.cpf,
+        birth_date: new Date(data2.birthDate).toISOString(),
+        email: data1.email,
         phone_number: data1.phone,
-        password:     data1.password,
+        password: data1.password,
       });
-      
+
       await login(data1.email, data1.password);
 
       nav("/");
@@ -99,11 +99,14 @@ export default function Register() {
     <StyledRegister>
       <div className="register-container">
         <img src="/logo.png" alt="Logo" className="logo" />
-        
+
         {step > 0 && (
           <div className="progress-container">
             <div className="progress-bar">
-              <div className="progress-fill" style={{ width: getProgressWidth() }}></div>
+              <div
+                className="progress-fill"
+                style={{ width: getProgressWidth() }}
+              ></div>
               <div className={`step ${step >= 1 ? "active" : ""}`}>1</div>
               <div className={`step ${step >= 2 ? "active" : ""}`}>2</div>
               <div className={`step ${step >= 3 ? "active" : ""}`}>3</div>
@@ -120,18 +123,27 @@ export default function Register() {
           <div className="welcome-screen">
             <h1>Bem-vindo ao seu futuro fitness</h1>
             <div className="welcome-buttons">
-              <button onClick={next} className="next">Iniciar cadastro</button>
+              <button onClick={next} className="next">
+                Iniciar cadastro
+              </button>
               <Link to="/login" style={{ width: "100%" }}>
                 <button className="back">Já tenho conta</button>
               </Link>
             </div>
           </div>
         )}
-        
+
         {step === 1 && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
+
+              if (data1.password.length < 8) {
+                setPasswordTooShort(true);
+                return;
+              }
+              setPasswordTooShort(false);
+
               if (data1.password !== data1.confirm) {
                 setPasswordMismatch(true);
                 return;
@@ -169,7 +181,9 @@ export default function Register() {
               type="email"
               placeholder="E-mail"
               value={data1.email}
-              onChange={(e) => setData1((d) => ({ ...d, email: e.target.value }))}
+              onChange={(e) =>
+                setData1((d) => ({ ...d, email: e.target.value }))
+              }
               required
             />
 
@@ -183,10 +197,7 @@ export default function Register() {
                 }
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-              >
+              <button type="button" onClick={() => setShowPassword((s) => !s)}>
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
@@ -201,16 +212,19 @@ export default function Register() {
                 }
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirm((s) => !s)}
-              >
+              <button type="button" onClick={() => setShowConfirm((s) => !s)}>
                 {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
             {passwordMismatch && (
               <p className="error-message">As senhas não coincidem.</p>
+            )}
+
+            {passwordTooShort && (
+              <p className="error-message">
+                A senha deve ter pelo menos 8 caracteres.
+              </p>
             )}
 
             <div className="buttons-container">
@@ -309,12 +323,12 @@ export default function Register() {
             </div>
           </form>
         )}
-        
+
         {step === 3 && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              handleSubmit();
+              handleSubmit(e);
             }}
           >
             <h2>Informações de treino</h2>
@@ -334,30 +348,36 @@ export default function Register() {
               <option value="3-5y">3–5 anos</option>
               <option value="5+y">5+ anos</option>
             </select>
-            
+
             <fieldset>
               <legend>Condições / Lesões</legend>
-              {["Diabetes", "Hipertensão", "Obesidade", "Lesão no joelho", "Lesão nas costas", "Gravidez", "Asma"].map(
-                (cond) => (
-                  <label key={cond}>
-                    <input
-                      type="checkbox"
-                      checked={data3.conditions.includes(cond)}
-                      onChange={() => {
-                        setData3((d) => ({
-                          ...d,
-                          conditions: d.conditions.includes(cond)
-                            ? d.conditions.filter((c) => c !== cond)
-                            : [...d.conditions, cond],
-                        }));
-                      }}
-                    />
-                    {cond}
-                  </label>
-                )
-              )}
+              {[
+                "Diabetes",
+                "Hipertensão",
+                "Obesidade",
+                "Lesão no joelho",
+                "Lesão nas costas",
+                "Gravidez",
+                "Asma",
+              ].map((cond) => (
+                <label key={cond}>
+                  <input
+                    type="checkbox"
+                    checked={data3.conditions.includes(cond)}
+                    onChange={() => {
+                      setData3((d) => ({
+                        ...d,
+                        conditions: d.conditions.includes(cond)
+                          ? d.conditions.filter((c) => c !== cond)
+                          : [...d.conditions, cond],
+                      }));
+                    }}
+                  />
+                  {cond}
+                </label>
+              ))}
             </fieldset>
-            
+
             <fieldset>
               <legend>Disponibilidade semanal</legend>
               {[
@@ -386,7 +406,7 @@ export default function Register() {
                 </label>
               ))}
             </fieldset>
-            
+
             <select
               value={data3.timePerDay}
               onChange={(e) =>
@@ -404,14 +424,12 @@ export default function Register() {
                 );
               })}
             </select>
-            
+
             <div className="buttons-container">
               <button type="button" onClick={prev} className="back">
                 Voltar
               </button>
-              <button type="submit">
-                Finalizar cadastro
-              </button>
+              <button type="submit">Finalizar cadastro</button>
             </div>
           </form>
         )}
