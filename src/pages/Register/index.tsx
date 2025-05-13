@@ -1,10 +1,14 @@
-import { useState, useContext } from "react";
+import { useState, useContext, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
 import InputMask from "react-input-mask";
-import { StyledRegister } from "./styles";
 import { Eye, EyeOff } from "lucide-react";
 
+import { AuthContext } from "../../contexts/AuthContext";
+import { StyledRegister } from "./styles";
+
+/* ------------------------------------------------------------------ */
+/* Tipagens de cada passo                                             */
+/* ------------------------------------------------------------------ */
 type Step1 = {
   username: string;
   phone: string;
@@ -18,7 +22,7 @@ type Step2 = {
   cpf: string;
   weight: string;
   height: string;
-  gender: string;
+  gender: "male" | "female" | "other" | "";
   birthDate: string;
 };
 type Step3 = {
@@ -28,7 +32,11 @@ type Step3 = {
   timePerDay: string;
 };
 
-export default function Register() {
+/* ------------------------------------------------------------------ */
+/* Componente                                                         */
+/* ------------------------------------------------------------------ */
+export default function RegisterPage() {
+  /* ----- estados ----- */
   const [step, setStep] = useState(0);
   const [data1, setData1] = useState<Step1>({
     username: "",
@@ -52,10 +60,12 @@ export default function Register() {
     weekdays: [],
     timePerDay: "",
   });
-  const { login } = useContext(AuthContext);
-  const { register } = useContext(AuthContext);
+
+  /* ----- context & nav ----- */
+  const { login, registerFull } = useContext(AuthContext);
   const nav = useNavigate();
 
+  /* ----- feedback ----- */
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
@@ -64,35 +74,103 @@ export default function Register() {
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    console.log(data2.firstName);
-    console.log("AAA");
+  /* ---------------------------------------------------------------- */
+  /* Monta payload completo para /auth/register-full                  */
+  /* ---------------------------------------------------------------- */
+  const buildPayload = () => {
+    /* mapeia gênero */
+    const genderMap = { male: "M", female: "F", other: "O", "": "O" } as const;
+
+    /* disponibilidade semanal */
+    const week = [
+      "Domingo",
+      "Segunda",
+      "Terça",
+      "Quarta",
+      "Quinta",
+      "Sexta",
+      "Sábado",
+    ];
+    const availability: Record<
+      | "sunday"
+      | "monday"
+      | "tuesday"
+      | "wednesday"
+      | "thursday"
+      | "friday"
+      | "saturday",
+      boolean
+    > = {
+      sunday: false,
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+    };
+    week.forEach((d, idx) => {
+      const key = Object.keys(availability)[idx] as keyof typeof availability;
+      availability[key] = data3.weekdays.includes(d);
+    });
+
+    /* condições → chaves do backend */
+    const condKey: Record<string, string> = {
+      Diabetes: "diabetes",
+      Hipertensão: "hyper_tension",
+      Obesidade: "obesity",
+      "Lesão no joelho": "damaged_left_lower_body",
+      "Lesão nas costas": "chronic_back_pain",
+      Gravidez: "pregnancy",
+      Asma: "asthma",
+    };
+    const condition: Record<string, boolean> = {};
+    data3.conditions.forEach((c) => (condition[condKey[c]] = true));
+
+    return {
+      first_name: data2.firstName,
+      last_name: data2.lastName,
+      cpf: data2.cpf,
+      birth_date: new Date(data2.birthDate).toISOString(),
+      email: data1.email,
+      phone_number: data1.phone,
+      password: data1.password,
+
+      personal_info: {
+        weight_kg: Number(data2.weight),
+        height_cm: Math.round(parseFloat(data2.height.replace(",", ".")) * 100),
+        bio_gender: genderMap[data2.gender],
+        training_since: new Date().toISOString(),
+      },
+
+      training_availability: availability,
+      condition,
+    };
+  };
+
+  /* ---------------------------------------------------------------- */
+  /* Envia cadastro                                                    */
+  /* ---------------------------------------------------------------- */
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     try {
-      await register({
-        first_name: data2.firstName,
-        last_name: data2.lastName,
-        cpf: data2.cpf,
-        birth_date: new Date(data2.birthDate).toISOString(),
-        email: data1.email,
-        phone_number: data1.phone,
-        password: data1.password,
-      });
-
+      const payload = buildPayload();
+      await registerFull(payload);
       await login(data1.email, data1.password);
-
       nav("/");
     } catch (err) {
       console.error(err);
+      alert((err as Error).message);
     }
   };
 
-  // Determinar largura da barra de progresso com base na etapa atual
+  /* ---------------------------------------------------------------- */
+  /* Render                                                            */
+  /* ---------------------------------------------------------------- */
   const getProgressWidth = () => {
     if (step === 0) return "0%";
-    // 3 passos no total (começando do 1)
-    const stepsTotal = 3;
-    const currentStep = step - 1; // 0-based para cálculos
-    return `${(currentStep / (stepsTotal - 1)) * 100}%`;
+    const total = 3;
+    return `${((step - 1) / (total - 1)) * 100}%`;
   };
 
   return (
