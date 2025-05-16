@@ -22,7 +22,7 @@ type Step2 = {
   cpf: string;
   weight: string;
   height: string;
-  gender: "male" | "female" | "other" | "";
+  gender: "male" | "female" | "";
   birthDate: string;
 };
 type Step3 = {
@@ -70,6 +70,8 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [passwordTooShort, setPasswordTooShort] = useState(false);
+  const [invalidEmail, setInvalidEmail] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
@@ -78,10 +80,8 @@ export default function RegisterPage() {
   /* Monta payload completo para /auth/register-full                  */
   /* ---------------------------------------------------------------- */
   const buildPayload = () => {
-    /* mapeia gênero */
     const genderMap = { male: "M", female: "F", other: "O", "": "O" } as const;
 
-    /* disponibilidade semanal */
     const week = [
       "Domingo",
       "Segunda",
@@ -114,31 +114,69 @@ export default function RegisterPage() {
       availability[key] = data3.weekdays.includes(d);
     });
 
-    /* condições → chaves do backend */
+    // Mapeia as condições para as chaves do backend
     const condKey: Record<string, string> = {
+      Gravidez: "pregnancy",
+      Obesidade: "obesity",
       Diabetes: "diabetes",
       Hipertensão: "hyper_tension",
-      Obesidade: "obesity",
-      "Lesão no joelho": "damaged_left_lower_body",
-      "Lesão nas costas": "chronic_back_pain",
-      Gravidez: "pregnancy",
       Asma: "asthma",
+      Osteoporose: "osteoporosis",
+      Artrite: "arthritis",
+      "Lesão na perna esquerda": "damaged_left_lower_body",
+      "Lesão na perna direita": "damaged_right_lower_body",
+      "Lesão no braço esquerdo": "damaged_left_upper_body",
+      "Lesão no braço direito": "damaged_right_upper_body",
+      "Lesão nas costas": "chronic_back_pain",
     };
+
+    // Inicializa todos os campos como false
+    const allConditionFields = [
+      "diabetes",
+      "hyper_tension",
+      "cardiovascular_disease",
+      "obesity",
+      "asthma",
+      "arthritis",
+      "osteoporosis",
+      "chronic_back_pain",
+      "damaged_left_upper_body",
+      "damaged_right_upper_body",
+      "damaged_left_lower_body",
+      "damaged_right_lower_body",
+      "damaged_body_core",
+      "recent_surgery",
+      "pregnancy",
+    ];
+
     const condition: Record<string, boolean> = {};
-    data3.conditions.forEach((c) => (condition[condKey[c]] = true));
+    allConditionFields.forEach((field) => {
+      condition[field] = false;
+    });
+
+    // Marca apenas os selecionados como true
+    data3.conditions.forEach((c) => {
+      const key = condKey[c];
+      if (key) condition[key] = true;
+    });
 
     return {
       first_name: data2.firstName,
       last_name: data2.lastName,
-      cpf: data2.cpf,
+      username: data1.username, // ← ESSENCIAL!
+      cpf: data2.cpf.replace(/[^\d]/g, ""), // remove máscara
       birth_date: new Date(data2.birthDate).toISOString(),
       email: data1.email,
       phone_number: data1.phone,
       password: data1.password,
+      available_time: data3.timePerDay,
 
       personal_info: {
         weight_kg: Number(data2.weight),
-        height_cm: Math.round(parseFloat(data2.height.replace(",", ".")) * 100),
+        height_cm: Math.round(
+          parseFloat(data2.height.replace(",", ".")) *
+            (data2.height.includes(",") || data2.height.includes(".") ? 100 : 1) // evita multiplicar 180 por 100
+        ),
         bio_gender: genderMap[data2.gender],
         training_since: new Date().toISOString(),
       },
@@ -153,6 +191,7 @@ export default function RegisterPage() {
   /* ---------------------------------------------------------------- */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const payload = buildPayload();
       await registerFull(payload);
@@ -161,6 +200,8 @@ export default function RegisterPage() {
     } catch (err) {
       console.error(err);
       alert((err as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -227,6 +268,14 @@ export default function RegisterPage() {
                 return;
               }
               setPasswordMismatch(false);
+
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(data1.email)) {
+                setInvalidEmail(true);
+                return;
+              }
+              setInvalidEmail(false);
+
               next();
             }}
           >
@@ -264,6 +313,7 @@ export default function RegisterPage() {
               }
               required
             />
+            {invalidEmail && <p className="error-message">E-mail inválido</p>}
 
             <div className="password-input">
               <input
@@ -363,7 +413,7 @@ export default function RegisterPage() {
               required
             />
             <input
-              placeholder="Altura (m)"
+              placeholder="Altura (cm)"
               value={data2.height}
               onChange={(e) =>
                 setData2((d) => ({ ...d, height: e.target.value }))
@@ -373,14 +423,16 @@ export default function RegisterPage() {
             <select
               value={data2.gender}
               onChange={(e) =>
-                setData2((d) => ({ ...d, gender: e.target.value }))
+                setData2((d) => ({
+                  ...d,
+                  gender: e.target.value as Step2["gender"],
+                }))
               }
               required
             >
               <option value="">Gênero biológico</option>
               <option value="male">Masculino</option>
               <option value="female">Feminino</option>
-              <option value="other">Outro</option>
             </select>
             <input
               type="date"
@@ -430,13 +482,18 @@ export default function RegisterPage() {
             <fieldset>
               <legend>Condições / Lesões</legend>
               {[
+                "Gravidez",
+                "Obesidade",
                 "Diabetes",
                 "Hipertensão",
-                "Obesidade",
-                "Lesão no joelho",
+                "Lesão na perna esquerda",
+                "Lesão na perna direita",
+                "Lesão no braço esquerdo",
+                "Lesão no braço direito",
                 "Lesão nas costas",
-                "Gravidez",
                 "Asma",
+                "Osteoporose",
+                "Artrite",
               ].map((cond) => (
                 <label key={cond}>
                   <input
@@ -507,7 +564,9 @@ export default function RegisterPage() {
               <button type="button" onClick={prev} className="back">
                 Voltar
               </button>
-              <button type="submit">Finalizar cadastro</button>
+              <button type="submit" disabled={loading}>
+                {loading ? <span className="spinner" /> : "Finalizar cadastro"}
+              </button>
             </div>
           </form>
         )}
