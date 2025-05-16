@@ -5,63 +5,76 @@ import {
   Dumbbell,
   Settings,
   User,
+  Clock,
 } from "lucide-react";
-import {
-  StyledHome,
-  Sidebar,
-  Content,
-  TreinoGrid,
-  TreinoCard,
-  GridHorizontal,
-} from "./styles";
+import { StyledHome, Sidebar, Content } from "./styles";
 import { useNavigate, NavLink } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import NewTreinoButton from "../../components/Treino/NewTreinoButton";
-import { SectionTitle } from "../../components/Treino/SectionTitle";
-import TreinoWizard from "../../components/Treino/TreinoWizard";
-import { useState } from "react";
-export interface Treino {
-  id: number;
-  nome: string;
-  descricao: string;
-  exercicios: string[];
+
+interface Exercicios {
+  exercise_name: string;
+  reps: number;
+  weight: number;
+  rest: number;
 }
 
-export const treinosExemplo: Treino[] = [
-  {
-    id: 1,
-    nome: "Full Body Iniciante",
-    descricao: "Treino equilibrado para quem está começando, trabalhando todos os grupos musculares.",
-    exercicios: ["Agachamento", "Flexão de braço", "Remada curvada"]
-  },
-  {
-    id: 2,
-    nome: "Hipertrofia Superior",
-    descricao: "Foco em peito, costas e braços para ganho de massa muscular.",
-    exercicios: ["Supino reto", "Puxada na barra", "Rosca direta", "Tríceps testa"]
-  },
-  {
-    id: 3,
-    nome: "Cardio e Resistência",
-    descricao: "Circuito de alta intensidade para melhorar condicionamento.",
-    exercicios: ["Corrida estacionária (5 min)", "Burpee (3×15)", "Pular corda (3×1 min)"]
-  }
-];
+interface Treino {
+  name: string;
+  expected_duration: number;
+  exercises: Exercicios[];
+}
 
-
-
+type TreinoData = Record<string, Treino>;
 
 export default function Treinos() {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // estado com lista + modal
-  const [treinos, setTreinos] = useState<Treino[]>(treinosExemplo);
-  const [openWizard, setOpenWizard] = useState(false);
+  const [treinos, setTreinos] = useState<TreinoData>({});
+  const [weekRange, setWeekRange] = useState("");
 
-  const addTreino = (novo: Treino) => setTreinos((prev) => [...prev, novo]);
-  
+  useEffect(() => {
+    const now = new Date();
+    const monday = new Date(now.setDate(now.getDate() - now.getDay() + 1));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const formatDate = (d: Date) =>
+      d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
+    setWeekRange(`Semana ${monday.getDate()} – ${formatDate(sunday)}`);
+
+    async function fetchTreinos() {
+      try {
+        const response = await fetch("http://localhost:8003/treino/debug", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Erro ao buscar treinos");
+
+        const data: TreinoData = await response.json();
+        setTreinos(data);
+        localStorage.setItem("weekTreinos", JSON.stringify(data));
+      } catch (error) {
+        console.error("Erro ao carregar treinos:", error);
+      }
+    }
+
+    fetchTreinos();
+  }, []);
+
+  const diasSemana: Record<string, string> = {
+    monday: "Segunda-feira",
+    tuesday: "Terça-feira",
+    wednesday: "Quarta-feira",
+    thursday: "Quinta-feira",
+    friday: "Sexta-feira",
+    saturday: "Sábado",
+    sunday: "Domingo",
+  };
+
   return (
     <StyledHome>
       <Sidebar>
@@ -117,9 +130,7 @@ export default function Treinos() {
 
         <div className="bottom-section">
           <div className="profile-placeholder" />
-
-          <p style={{ color: "#555", marginLeft: "10px" }}>iancdesponds</p>
-
+          <p>iancdesponds</p>
           <button
             onClick={() => {
               logout();
@@ -130,38 +141,70 @@ export default function Treinos() {
           </button>
         </div>
       </Sidebar>
+
       <Content>
-        <GridHorizontal>
-       
+        <h1>Meus Treinos</h1>
+        <h2>{weekRange}</h2>
 
-        <SectionTitle>Gestor de Treinos</SectionTitle>
-        <NewTreinoButton onClick={() => setOpenWizard(true)} />
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            flexWrap: "wrap",
+            marginTop: "2rem",
+          }}
+        >
+          {Object.entries(treinos).map(([key, treino]) => {
+            if (!treino || !treino.exercises) return null; // proteção extra
 
-        <TreinoGrid>
-          {treinos.map((t) => (
-            <TreinoCard key={t.id}>
-              <h2>{t.nome}</h2>
-              <p>{t.descricao}</p>
-              <ul>
-                {t.exercicios.map((ex, i) => (
-                  <li key={i}>{ex}</li>
-                ))}
-              </ul>
-              <button onClick={() => console.log("Ver detalhes", t.id)}>
-                Ver detalhes
-              </button>
-            </TreinoCard>
-          ))}
-        </TreinoGrid>
-        </GridHorizontal>
+            const nomeDia = diasSemana[key] || key;
+
+            return (
+              <div
+                key={key}
+                style={{
+                  border: "1px solid #333",
+                  borderRadius: "8px",
+                  padding: "1rem",
+                  width: "300px",
+                  backgroundColor: "#1a1a1a",
+                }}
+              >
+                <p style={{ color: "#aaa", marginBottom: "0.5rem" }}>
+                  {nomeDia}
+                </p>
+                <h3 style={{ margin: 0 }}>{treino.name}</h3>
+                <p style={{ margin: "0.5rem 0" }}>
+                  {treino.exercises.length} séries
+                </p>
+                <p
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    color: "#ccc",
+                  }}
+                >
+                  <Clock size={16} /> Tempo estimado: {treino.expected_duration}{" "}
+                  min
+                </p>
+                <button
+                  style={{ marginTop: "1rem", width: "100%" }}
+                  onClick={() => {
+                    localStorage.setItem(
+                      "currentTreino",
+                      JSON.stringify(treino)
+                    );
+                    navigate(`/treino/${key}`);
+                  }}
+                >
+                  Iniciar Treino
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </Content>
-
-      {openWizard && (
-        <TreinoWizard
-          onClose={() => setOpenWizard(false)}
-          onFinished={addTreino}
-        />
-      )}
     </StyledHome>
   );
 }
