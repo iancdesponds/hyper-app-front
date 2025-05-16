@@ -1,15 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { PublicRoute } from './components/PublicRoute';
-import { PrivateRoute } from './components/PrivateRoute';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { PublicRoute } from "./components/PublicRoute";
+import { PrivateRoute } from "./components/PrivateRoute";
 
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Treinos from './pages/Treinos';
-import Historico from './pages/Historico';
-import Exercicios from './pages/Exercicios';
-import Perfil from './pages/Perfil';
-import Configuracoes from './pages/Configuracoes';
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Treinos from "./pages/Treinos";
+import ExecutarTreino from "./pages/ExecutarTreino";
+import Historico from "./pages/Historico";
+import Exercicios from "./pages/Exercicios";
+import Perfil from "./pages/Perfil";
+import Configuracoes from "./pages/Configuracoes";
 
 export default function AppRoutes() {
   return (
@@ -70,6 +71,15 @@ export default function AppRoutes() {
             element={
               <PrivateRoute>
                 <Configuracoes />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/treino/:id"
+            element={
+              <PrivateRoute>
+                <ExecutarTreino />
               </PrivateRoute>
             }
           />
