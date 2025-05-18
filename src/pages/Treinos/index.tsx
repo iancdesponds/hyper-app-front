@@ -47,7 +47,7 @@ export default function Treinos() {
 
     async function fetchTreinos() {
       try {
-        const response = await fetch("http://localhost:8003/treino/debug", {
+        const response = await fetch("http://localhost:8003/treino", {
           method: "GET",
           credentials: "include",
         });
