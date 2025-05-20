@@ -175,8 +175,15 @@ export default function Treinos() {
                 </p>
                 <h3 style={{ margin: 0 }}>{treino.name}</h3>
                 <p style={{ margin: "0.5rem 0" }}>
-                  {treino.exercises.length} séries
+                  {treino.exercises.length} exercícios,{" "}
+                  {treino.exercises.reduce(
+                    (total, ex) =>
+                      total + (Array.isArray(ex.reps) ? ex.reps.length : 1),
+                    0
+                  )}{" "}
+                  séries
                 </p>
+
                 <p
                   style={{
                     display: "flex",

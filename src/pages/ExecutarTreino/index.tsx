@@ -13,9 +13,9 @@ import {
 
 interface Exercicios {
   exercise_name: string;
-  reps: number;
-  weight: number;
-  rest: number;
+  reps: number[];
+  weight: number[];
+  rest: number[];
 }
 
 interface Treino {
@@ -107,44 +107,48 @@ export default function ExecutarTreino() {
                 </tr>
               </thead>
               <tbody>
-                <SetRow key={keyBase}>
-                  <td>1</td>
-                  <td>
-                    <InputCell
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      value={
-                        customSets[keyBase]?.peso ?? extrairPeso(ex.weight)
-                      }
-                      onChange={(e) =>
-                        handleInputChange(keyBase, "peso", e.target.value)
-                      }
-                    />
-                  </td>
-                  <td>
-                    <InputCell
-                      type="number"
-                      inputMode="numeric"
-                      step="1"
-                      value={
-                        customSets[keyBase]?.reps ?? String(ex.reps)
-                      }
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "");
-                        handleInputChange(keyBase, "reps", value);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <CheckButton
-                      selected={checkState[keyBase]}
-                      onClick={() => toggleCheck(keyBase)}
-                    >
-                      <Check size={16} />
-                    </CheckButton>
-                  </td>
-                </SetRow>
+                {ex.reps.map((_, setIndex) => {
+                  const key = `${exIndex}-${setIndex}`;
+                  const peso = ex.weight[setIndex] ?? 0;
+                  const rep = ex.reps[setIndex] ?? 0;
+
+                  return (
+                    <SetRow key={key}>
+                      <td>{setIndex + 1}</td>
+                      <td>
+                        <InputCell
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          value={customSets[key]?.peso ?? String(peso)}
+                          onChange={(e) =>
+                            handleInputChange(key, "peso", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td>
+                        <InputCell
+                          type="number"
+                          inputMode="numeric"
+                          step="1"
+                          value={customSets[key]?.reps ?? String(rep)}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            handleInputChange(key, "reps", value);
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <CheckButton
+                          selected={checkState[key]}
+                          onClick={() => toggleCheck(key)}
+                        >
+                          <Check size={16} />
+                        </CheckButton>
+                      </td>
+                    </SetRow>
+                  );
+                })}
               </tbody>
             </table>
           </ExerciseBlock>
