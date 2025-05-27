@@ -1,98 +1,92 @@
+// src/components/SidebarStyles.ts
 import { styled } from "@stitches/react";
 
 export const SidebarWrapper = styled("aside", {
-  width: "250px",
-  backgroundColor: "#1e1e1e",
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  borderRight: "1px solid #333333",
-  padding: "1.5rem 1rem",
-  color: "#ffffff",
+  backgroundColor: "#1e1e1e",
+  color: "#fff",
+  borderRight: "1px solid #333",
+  transition: "width 0.2s ease",
+  variants: {
+    collapsed: {
+      true: { width: "60px" },
+      false: { width: "250px" },
+    },
+  },
+  defaultVariants: { collapsed: false },
 
   "& .brand": {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "0.8rem",
-    marginBottom: "2rem",
-
-    "& h1": {
-      fontSize: "1.5rem",
-      fontWeight: "500",
-      color: "#ffffff",
-    },
+    padding: "1rem 0",
+    gap: "0.5rem",
+    textAlign: "center",
   },
 
   "& .logo": {
-    width: "100px",
+    width: "80px",
   },
 
   "& nav ul": {
     listStyle: "none",
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
     padding: 0,
     margin: 0,
   },
 
-  "& nav li a": {
+  "& nav li": {
+    margin: "0.5rem 0",
+  },
+
+  "& nav a": {
     display: "flex",
     alignItems: "center",
-    gap: "0.8rem",
-    color: "#cccccc",
-    fontSize: "1rem",
-    padding: "0.5rem 0.8rem",
-    borderRadius: "8px",
+    gap: "0.75rem",
+    padding: "0.5rem 1rem",
+    color: "#ccc",
     textDecoration: "none",
     transition: "background 0.2s",
-
     "&:hover": {
       backgroundColor: "#2c2c2c",
     },
-
     "&.active": {
-      backgroundColor: "#ffffff",
-      color: "#121212",
+      backgroundColor: "#333",
+      color: "#fff",
     },
   },
 
   "& .bottom-section": {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: "2rem",
+    padding: "1rem",
     gap: "0.5rem",
-
-    "& p": {
-      color: "#cccccc",
-      margin: 0,
-      fontSize: "0.9rem",
-      flex: 1,
-    },
-
-    "& button": {
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      color: "#888",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-
-      "&:hover": {
-        color: "#ffffff",
-      },
-    },
   },
 
-  "& .profile-placeholder": {
-    width: "36px",
-    minWidth: "36px",
-    height: "36px",
-    minHeight: "36px",
-    borderRadius: "50%",
-    backgroundColor: "#333333",
+  "& .username": {
+    flex: 1,
+    fontSize: "0.9rem",
+  },
+});
+
+export const ToggleButton = styled("button", {
+  position: "absolute",
+  top: "10px",
+  right: "-12px",
+  backgroundColor: "#1e1e1e",
+  border: "1px solid #333",
+  borderRadius: "50%",
+  width: "24px",
+  height: "24px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  color: "#fff",
+  transition: "transform 0.2s",
+  "&:hover": {
+    transform: "scale(1.1)",
   },
 });

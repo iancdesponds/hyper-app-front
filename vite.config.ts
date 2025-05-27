@@ -1,9 +1,15 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()]
-})
-
+  plugins: [react()],
+  server: {
+    host: true,           // expõe em 0.0.0.0, acessível em qualquer interface
+    port: 5173,
+    hmr: {
+      host: 'localhost',  // força o HMR a apontar para localhost
+      protocol: 'ws',
+      port: 5173,
+    },
+  },
+});
