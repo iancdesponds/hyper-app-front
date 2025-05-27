@@ -6,7 +6,9 @@ import { ClipboardList, History, User, LogOut } from "lucide-react";
 import { SidebarWrapper, ToggleButton } from "./SidebarStyles";
 
 export default function Sidebar() {
-  const { logout, user } = useContext(AuthContext);
+  const { getFullName, logout } = useContext(AuthContext);
+  const fullName = getFullName() ?? "Convidado";
+
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -30,19 +32,19 @@ export default function Sidebar() {
       <nav>
         <ul>
           <li>
-            <NavLink to="/treinos" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/treinos" className={({ isActive }) => (isActive ? "active" : "")}>
               <ClipboardList size={24} />
               {!collapsed && "Treinos"}
             </NavLink>
           </li>
           <li>
-            <NavLink to="/historico" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/historico" className={({ isActive }) => (isActive ? "active" : "")}>
               <History size={24} />
               {!collapsed && "Histórico"}
             </NavLink>
           </li>
           <li>
-            <NavLink to="/perfil" className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink to="/perfil" className={({ isActive }) => (isActive ? "active" : "")}>
               <User size={24} />
               {!collapsed && "Perfil"}
             </NavLink>
@@ -53,8 +55,8 @@ export default function Sidebar() {
       <div className="bottom-section">
         <div className="profile-placeholder" />
         {!collapsed && (
-          <p className="username">
-            {user?.username || "Usuário"}
+          <p style={{ color: "#555", marginLeft: "10px" }}>
+            {fullName}
           </p>
         )}
         <button
