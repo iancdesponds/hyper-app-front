@@ -199,7 +199,7 @@ export default function Historico() {
   useEffect(() => {
     async function fetchHistory() {
       try {
-        const res = await fetch("http://localhost:8003/treino/all", {
+        const res = await fetch(`${import.meta.env.VITE_TRAINING_URL}/treino/all`, {
           credentials: "include",
           headers: {
             Accept: "application/json",

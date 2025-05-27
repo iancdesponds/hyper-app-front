@@ -52,7 +52,7 @@ export default function Perfil() {
   useEffect(() => {
     async function fetchConcluded() {
       try {
-        const res = await fetch("http://localhost:8003/treino/all", {
+        const res = await fetch(`${import.meta.env.VITE_TRAINING_URL}/treino/all`, {
           credentials: "include",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -75,7 +75,7 @@ export default function Perfil() {
   useEffect(() => {
     async function fetchSchedule() {
       try {
-        const res = await fetch("http://localhost:8003/treino", {
+        const res = await fetch(`${import.meta.env.VITE_TRAINING_URL}/treino`, {
           credentials: "include",
           headers: {
             Authorization: token ? `Bearer ${token}` : ""

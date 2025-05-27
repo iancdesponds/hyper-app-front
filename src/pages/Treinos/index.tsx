@@ -65,7 +65,7 @@ export default function Treinos() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("http://localhost:8003/treino", {
+        const res = await fetch(`${import.meta.env.VITE_TRAINING_URL}/treino`, {
           credentials: 'include',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
