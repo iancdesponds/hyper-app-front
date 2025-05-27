@@ -1,83 +1,81 @@
 // src/contexts/AuthContext.tsx
+
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import Cookies from "js-cookie";
 
-/* ------------------------------------------------------------------ */
-/* Tipagem do payload completo do backend                             */
-/* ------------------------------------------------------------------ */
-export interface RegisterFullData {
+export interface UserData {
+  id: number;
   first_name: string;
   last_name: string;
-  cpf: string;
-  birth_date: string;           // ISO
   email: string;
-  phone_number: string;
-  password: string;
-
-  personal_info: {
-    weight_kg: number;
-    height_cm: number;
-    bio_gender: "M" | "F" | "O";
-    training_since: string;
-  };
-
-  training_availability: {
-    sunday: boolean;
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-  };
-
-  /* chaves dinâmicas: enviamos apenas as que forem true */
-  condition: Record<string, boolean>;
+  username?: string; // se o backend expuser
 }
 
-/* ------------------------------------------------------------------ */
-/* Interface exposta ao resto do app                                  */
-/* ------------------------------------------------------------------ */
 interface AuthContextType {
   token: string | null;
+  user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  registerFull: (data: RegisterFullData) => Promise<void>;
+  registerFull: (data: any) => Promise<void>;
 }
 
-/* ------------------------------------------------------------------ */
-/* Context                                                             */
-/* ------------------------------------------------------------------ */
 export const AuthContext = createContext<AuthContextType>({
   token: null,
+  user: null,
   login: async () => {},
   logout: () => {},
   registerFull: async () => {},
 });
 
-/* ------------------------------------------------------------------ */
-/* Provider                                                            */
-/* ------------------------------------------------------------------ */
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
 
-  /* recupera token salvo em cookie ao recarregar */
+  // Ao montar, lê o token do cookie
   useEffect(() => {
     const t = Cookies.get("session_token");
     if (t) setToken(t);
   }, []);
 
-  /* ------------------------- LOGIN -------------------------- */
+  // Sempre que mudar o token, busca /auth/me
+  useEffect(() => {
+    async function fetchUser() {
+      if (!token) {
+        setUser(null);
+        return;
+      }
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          throw new Error("Falha ao buscar usuário");
+        }
+        const u: UserData = await res.json();
+        setUser(u);
+      } catch (err) {
+        console.error("Erro ao carregar usuário:", err);
+        setUser(null);
+      }
+    }
+    fetchUser();
+  }, [token]);
+
+  // Função de login
   const login = async (email: string, password: string) => {
     const body = new URLSearchParams();
-    body.append("username", email);   // OAuth2PasswordRequestForm exige "username"
+    body.append("username", email);
     body.append("password", password);
 
     const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
       body,
     });
 
@@ -87,38 +85,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     const { access_token } = (await resp.json()) as { access_token: string };
-    Cookies.set("session_token", access_token, { expires: 1 }); // 1 dia
+    // Salva cookie e estado
+    Cookies.set("session_token", access_token, { expires: 1 });
     setToken(access_token);
   };
 
-  /* ----------------------- REGISTER ------------------------- */
-  const registerFull = async (data: RegisterFullData) => {
-    const resp = await fetch(
-      `${import.meta.env.VITE_API_URL}/auth/register`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }
-    );
-
+  // Função de registro completo (mantém sua implementação atual)
+  const registerFull = async (data: any) => {
+    const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
     const payload = await resp.json();
     if (!resp.ok) {
-      console.error("🔥 Enviado:", data);
-      console.error("🔥 Erro:", payload);
+      console.error("Erro no registerFull:", payload);
       throw new Error(payload.detail ?? JSON.stringify(payload));
     }
     return payload;
   };
 
-  /* ------------------------- LOGOUT ------------------------- */
+  // Função de logout
   const logout = () => {
     Cookies.remove("session_token");
     setToken(null);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, registerFull }}>
+    <AuthContext.Provider
+      value={{ token, user, login, logout, registerFull }}
+    >
       {children}
     </AuthContext.Provider>
   );
