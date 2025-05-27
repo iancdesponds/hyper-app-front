@@ -1,4 +1,4 @@
-// src/components/DashboardCard.tsx
+// src/components/Perfil/DashBoardCard.tsx
 import React from 'react';
 import { styled } from '@stitches/react';
 
@@ -18,7 +18,7 @@ const Card = styled('div', {
   },
 
   '& span': {
-    fontSize: '2rem',
+    fontSize: '1.5rem', // decreased from 2rem
     fontWeight: 700,
     marginTop: 'auto',
   },

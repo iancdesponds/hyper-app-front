@@ -36,19 +36,18 @@ export interface RegisterFullData {
 }
 
 /** Estrutura do objeto usuário que vem do endpoint /auth/me */
-interface User {
+export interface User {
   id: number;
   first_name: string;
   last_name: string;
   email: string;
-  // adicione outros campos se precisar
+  phone_number?: string;
+  // outros campos, se houver
 }
-
 
 /* ------------------------------------------------------------------ */
 /* Interface exposta ao resto do app                                  */
 /* ------------------------------------------------------------------ */
-
 interface AuthContextType {
   token: string | null;
   user: User | null;
@@ -59,10 +58,6 @@ interface AuthContextType {
   getFullName: () => string | null;
 }
 
-
-/* ------------------------------------------------------------------ */
-/* Context                                                             */
-/* ------------------------------------------------------------------ */
 export const AuthContext = createContext<AuthContextType>({
   token: null,
   user: null,
@@ -75,13 +70,11 @@ export const AuthContext = createContext<AuthContextType>({
 /* ------------------------------------------------------------------ */
 /* Provider                                                            */
 /* ------------------------------------------------------------------ */
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
-  /* recupera token salvo em cookie ao recarregar */
+  // Ao montar, lê o token do cookie e carrega o perfil
   useEffect(() => {
     const t = Cookies.get("session_token");
     if (t) {
@@ -100,7 +93,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         const data = (await resp.json()) as User;
         setUser(data);
       } else {
-        // se token expirou ou inválido
         logout();
       }
     } catch {
@@ -108,6 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Faz login e carrega token + perfil
   const login = async (email: string, password: string) => {
     const body = new URLSearchParams();
     body.append("username", email);
@@ -124,40 +117,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     const { access_token } = (await resp.json()) as { access_token: string };
-    Cookies.set("session_token", access_token, { expires: 1 }); // 1 dia
+    Cookies.set("session_token", access_token, { expires: 1 }); // expira em 1 dia
     setToken(access_token);
-
-    // carrega o usuário imediatamente
     await fetchProfile(access_token);
   };
 
-  /* ----------------------- REGISTER ------------------------- */
-
+  // Registro completo de usuário
   const registerFull = async (data: RegisterFullData) => {
     const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-
     const payload = await resp.json();
     if (!resp.ok) {
-      console.error("🔥 Enviado:", data);
-      console.error("🔥 Erro:", payload);
+      console.error("🔥 registerFull payload:", payload);
       throw new Error(payload.detail ?? JSON.stringify(payload));
     }
     return payload;
   };
 
+  // Logout e limpeza de estado
   const logout = () => {
     Cookies.remove("session_token");
     setToken(null);
     setUser(null);
   };
 
+  // Retorna "First Last" se user existir
   const getFullName = (): string | null => {
-    if (!user) return null;
-    return `${user.first_name} ${user.last_name}`;
+    return user ? `${user.first_name} ${user.last_name}` : null;
   };
 
   return (
