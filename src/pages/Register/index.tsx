@@ -72,6 +72,8 @@ export default function RegisterPage() {
   const [passwordTooShort, setPasswordTooShort] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [invalidWeight, setInvalidWeight] = useState(false);
+  const [invalidHeight, setInvalidHeight] = useState(false);
 
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
@@ -163,7 +165,7 @@ export default function RegisterPage() {
     return {
       first_name: data2.firstName,
       last_name: data2.lastName,
-      username: data1.username, // ← ESSENCIAL!
+      username: data1.username,
       cpf: data2.cpf.replace(/[^\d]/g, ""), // remove máscara
       birth_date: new Date(data2.birthDate).toISOString(),
       email: data1.email,
@@ -370,6 +372,17 @@ export default function RegisterPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              const peso = parseFloat(data2.weight.replace(",", "."));
+              const altura = parseInt(data2.height);
+
+              const pesoOk = peso >= 1 && peso <= 400;
+              const alturaOk = altura >= 1 && altura <= 300;
+
+              setInvalidWeight(!pesoOk);
+              setInvalidHeight(!alturaOk);
+
+              if (!pesoOk || !alturaOk) return;
+
               next();
             }}
           >
@@ -405,21 +418,42 @@ export default function RegisterPage() {
               )}
             </InputMask>
             <input
+              type="number"
+              step="0.1"
+              min="1"
+              max="400"
               placeholder="Peso (kg)"
               value={data2.weight}
-              onChange={(e) =>
-                setData2((d) => ({ ...d, weight: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setData2((d) => ({ ...d, weight: value }));
+                const num = parseFloat(value.replace(",", "."));
+                setInvalidWeight(!(num >= 1 && num <= 400));
+              }}
               required
             />
+            {invalidWeight && (
+              <p className="error-message">Insira um valor válido</p>
+            )}
+
             <input
+              type="number"
+              min="1"
+              max="300"
               placeholder="Altura (cm)"
               value={data2.height}
-              onChange={(e) =>
-                setData2((d) => ({ ...d, height: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setData2((d) => ({ ...d, height: value }));
+                const num = parseInt(value);
+                setInvalidHeight(!(num >= 1 && num <= 300));
+              }}
               required
             />
+            {invalidHeight && (
+              <p className="error-message">Insira um valor válido</p>
+            )}
+
             <select
               value={data2.gender}
               onChange={(e) =>
