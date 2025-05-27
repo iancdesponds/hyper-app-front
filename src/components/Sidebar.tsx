@@ -12,7 +12,9 @@ import {
 import { SidebarWrapper } from "./SidebarStyles";
 
 export default function Sidebar() {
-  const { logout } = useContext(AuthContext);
+  const { getFullName, logout } = useContext(AuthContext);
+  const fullName = getFullName() ?? "Convidado";
+
   const navigate = useNavigate();
 
   return (
@@ -54,7 +56,7 @@ export default function Sidebar() {
 
       <div className="bottom-section">
         <div className="profile-placeholder" />
-        <p style={{ color: "#555", marginLeft: "10px" }}>iancdesponds</p>
+        <p style={{ color: "#555", marginLeft: "10px" }}>{fullName}</p>
         <button onClick={() => { logout(); navigate("/login"); }}>
           <LogOut size={20} />
         </button>
