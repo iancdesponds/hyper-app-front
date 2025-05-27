@@ -26,27 +26,17 @@ export default function Sidebar() {
         <ul>
           <li>
             <NavLink to="/treinos" className={({ isActive }) => (isActive ? "active" : "")}>
-              <ClipboardList size={20} /> Treinos
+              <ClipboardList size={30} /> Treinos
             </NavLink>
           </li>
           <li>
             <NavLink to="/historico" className={({ isActive }) => (isActive ? "active" : "")}>
-              <History size={20} /> Histórico
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/exercicios" className={({ isActive }) => (isActive ? "active" : "")}>
-              <Dumbbell size={20} /> Exercícios
+              <History size={30} /> Histórico
             </NavLink>
           </li>
           <li>
             <NavLink to="/perfil" className={({ isActive }) => (isActive ? "active" : "")}>
-              <User size={20} /> Perfil
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/configuracoes" className={({ isActive }) => (isActive ? "active" : "")}>
-              <Settings size={20} /> Configurações
+              <User size={30} /> Perfil
             </NavLink>
           </li>
         </ul>
