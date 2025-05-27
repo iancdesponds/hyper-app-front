@@ -49,7 +49,7 @@ export default function Treinos() {
 
     async function fetchTreinos() {
       try {
-        const response = await fetch(`${import.meta.env.VITE_TRAINING_URL}/treino`, {
+        const response = await fetch("http://localhost:8003/treino", {
           method: "GET",
           credentials: "include",
         });
