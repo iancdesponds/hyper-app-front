@@ -33,6 +33,7 @@ interface Exercicios {
 }
 
 interface Treino {
+  id: number;
   name: string;
   expected_duration: number;
   calories?: number;
@@ -155,5 +156,3 @@ export default function Treinos() {
     </StyledHome>
   );
 }
-
-// src/pages/Treinos/styles.ts

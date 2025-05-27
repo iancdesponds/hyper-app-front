@@ -54,7 +54,7 @@ export default function Sidebar() {
         <div className="profile-placeholder" />
         {!collapsed && (
           <p className="username">
-            {user?.first_name ?? user?.username ?? "Usuário"}
+            {user?.username || "Usuário"}
           </p>
         )}
         <button
